@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const client = new pg.Client({
+export const client = new pg.Client({
     user: process.env.POSTGRES_USER ,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
@@ -11,13 +11,9 @@ const client = new pg.Client({
     host: process.env.POSTGRES_HOST
 });
 
-export const connectToDatabase = async (timeoutMs: number = 5000)=>{
-    const timeoutPromise = new Promise<never>((_, reject) =>{
-        setTimeout(()=> reject(new Error('Connection timed out')), timeoutMs);
-    });
-
+export const connectToDatabase = async ()=>{
     try{
-        await Promise.race([client.connect(), timeoutPromise]);
+        await client.connect();
         console.log('Successfully connected to database');
     }catch(error){
         if(error instanceof Error){

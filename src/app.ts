@@ -2,8 +2,9 @@ import dotenv from 'dotenv';
 import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 
-import userRouter from './routes/userRoutes.js';
-import propertiesRouter from './routes/propertyRoutes.js';
+import postRouter from './routes/postRoutes.js';
+//import userRouter from './routes/userRoutes.js';
+//import propertiesRouter from './routes/propertyRoutes.js';
 import { connectToDatabase } from './database/dbConnection.js';
 
 
@@ -14,18 +15,16 @@ server.use(cors());
 server.use(express.json());
 server.use(express.urlencoded({extended: true}));
 
-connectToDatabase()
-.then((error) =>{
+(async ()=>{
+    const error = await connectToDatabase();
     if(error){
-        console.error('Failed to connect to the database', error);
+        console.error('Failed to connect to database');
     }
-})
-.catch((error)=>{
-    console.error('Unexpected error during database connection', error);
-});
+})();
 
-server.use('/api', userRouter);
-server.use('/api', propertiesRouter);
+//server.use('/api', userRouter);
+//server.use('/api', propertiesRouter);
+server.use('/api', postRouter);
 
 server.get('/', (req: Request, res: Response)=>{
     res.json({answer: "deu certo"});
