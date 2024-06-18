@@ -81,40 +81,38 @@ export const insertManyPost = async (req: Request, res:Response)=>{
 
 export const updateSinglePost = async (req: Request, res:Response)=>{
     try{
-        if(req.body.id && req.body.title && req.body.text){
-            const id: number = parseInt(req.body.id);
-            const title: string = req.body.title;
-            const text: string = req.body.text;
+        if(req.body.id){
+            const id = req.body.id;
+            let query: Query = {
+                text: "",
+                values: []
+            }
 
-            const query: Query = {
-                text: 'UPDATE posts SET title = $2, post_text = $3, updated_at = NOW() WHERE id = $1',
-                values: [id, title, text, ]
+            if(req.body.title && req.body.text){
+                const title: string = req.body.title;
+                const text: string = req.body.text;
+
+                query.text = 'UPDATE posts SET title = $2, post_text = $3, updated_at = NOW() WHERE id = $1';
+                query.values.push(id);
+                query.values.push(title);
+                query.values.push(text);
+
+            }else if(req.body.title){
+                const title: string = req.body.title;
+
+                query.text = "UPDATE posts SET title = $2, updated_at = NOW() WHERE id = $1";
+                query.values.push(id);
+                query.values.push(title);
+            }else{
+                const text: string = req.body.text;
+
+                query.text = "UPDATE posts SET post_text = $2, updated_at = NOW() WHERE id = $1";
+                query.values.push(id);
+                query.values.push(text);
             }
 
             const response = await client.query(query);
             res.status(200).json({data: response}).end();
-        }
-    }catch(error){
-        res.status(500).json({error: error}).end();
-    }
-};
-
-export const updateManyPosts = async (req: Request, res:Response)=>{
-    try{
-        if(req.body.data){
-            const data: ManyPosts = req.body;
-
-            for(const post of data.data){
-
-                const query: Query = {
-                    text: 'UPDATE posts SET title = $2, post_text = $3, updated_at NOW() WHERE id = $1',
-                    values: [post.id, post.title, post.text]
-                }
-
-                await client.query(query);
-            }
-
-            res.status(200).json({response: 'All the posts were updated successfully !!!'}).end();
         }
     }catch(error){
         res.status(500).json({error: error}).end();

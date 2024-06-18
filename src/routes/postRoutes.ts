@@ -13,8 +13,6 @@ postRouter.post('/post/many', postController.insertManyPost);
 
 postRouter.patch('/post', postController.updateSinglePost);
 
-postRouter.patch('/post/many', postController.updateManyPosts);
-
 postRouter.delete('/post', postController.deleteSinglePost);
 
 postRouter.delete('/post/many', postController.deleteManyPosts);

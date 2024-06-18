@@ -50,3 +50,9 @@ export type ManyPosts = {
 export type DeletePost = {
     data: number[]
 }
+
+export type updatePost = {
+    id: number
+    title?: string
+    text?: string
+}
