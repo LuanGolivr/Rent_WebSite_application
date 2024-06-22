@@ -1,19 +1,11 @@
 version: '3.9'
 
 services:
-  api:
-    build:
-      context: . #path to the docker file
-      target: production #here we're refering to the stage in dockerfile
-    container_name: server
-    env_file:
-      - .env
-    ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
-  
   db:
     image: postgres:latest
     container_name: database
+    networks:
+      - my_network
     restart: always
     env_file:
       - .env
@@ -26,6 +18,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  api:
+    build:
+      context: . #path to the docker file
+      target: production #here we're refering to the stage in dockerfile
+    container_name: server
+    networks:
+      - my_network
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
 
 volumes:
   postgres_data:
+
+networks:
+  my_network:
+    driver: bridge

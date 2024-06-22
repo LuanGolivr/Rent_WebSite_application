@@ -161,7 +161,19 @@ export const deleteManyPosts =  async (req: Request, res:Response)=>{
 
 export const feedDatabase =  async (req: Request, res:Response)=>{
     try{
+        const title: string = "Lorem ipsum dolor sit amet";
+        const text: string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
+        for(let i = 0; i < 100; i++){
+            const query: Query = {
+                text: 'INSERT INTO posts(title, post_text) VALUES ($1, $2)',
+                values: [title, text]
+            };
+            await client.query(query);
+            console.log(i);
+        }
+        
+        res.status(200).json({response: 'All the 100 records were stored in the database'});
     }catch(error){
         res.status(500).json({error: error}).end();
     }
