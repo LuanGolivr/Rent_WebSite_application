@@ -14,7 +14,7 @@ const logger = createLogger({
         })
     ),
     transports: [
-        new transports.File({filename: '../logs/test.log'}),
+        new transports.File({filename: '../logs/response_time_with_simple_cache.log'}),
     ]
 });
 
@@ -47,7 +47,7 @@ async function makeConcurrentRequest(url, count){
 function start(){
     const base_url = 'http://localhost:8000/api/post/';
     //const base_url = 'http://localhost:8000/api/post/58';
-    const numberOfRequests = 12;
+    const numberOfRequests = 10000;
 
     makeConcurrentRequest(base_url, numberOfRequests).then(()=>{
         logger.info(`Number of concurrent requests: ${numberOfRequests}`);

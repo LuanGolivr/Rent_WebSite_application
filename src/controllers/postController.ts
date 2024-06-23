@@ -1,21 +1,31 @@
 import { Request, Response } from "express";
+import NodeCache from "node-cache";
 import { client } from "../database/dbConnection.js";
 import { DeletePost, ManyPosts, Query } from "../utils/types.js";
 import { extractManyValues } from "../utils/queryBuilder.js";
 
+const cache = new NodeCache({stdTTL: 3600, checkperiod: 300, maxKeys: 150});
 
 export const getSinglePost = async (req: Request, res: Response)=>{
     try{
         if(req.params.id){
             const id = req.params.id;
-            
-            const query: Query = {
-                text: "SELECT * FROM posts WHERE id = $1",
-                values: [id]
-            }
 
-            const response = await client.query(query);
-            res.status(200).json({data: response.rows[0]}).end();
+            if(cache.has(id)){
+                const item = cache.get(id);
+                res.status(200).json({data: item}).end();
+            }else{
+                const query: Query = {
+                    text: "SELECT * FROM posts WHERE id = $1",
+                    values: [id]
+                }
+    
+                const response = await client.query(query);
+                if(response.rows[0]){
+                    cache.set(response.rows[0].id, response.rows[0]);
+                }
+                res.status(200).json({data: response.rows[0]}).end();
+            }
         }
     }catch(error){
         res.status(500).json({error: error}).end();
@@ -112,6 +122,10 @@ export const updateSinglePost = async (req: Request, res:Response)=>{
             }
 
             const response = await client.query(query);
+            
+            if(cache.has(id)){
+                cache.del(id);
+            }
             res.status(200).json({data: response}).end();
         }
     }catch(error){
@@ -130,6 +144,10 @@ export const deleteSinglePost =  async (req: Request, res:Response)=>{
             }
 
             await client.query(query);
+            if(cache.has(id)){
+                cache.del(id);
+            }
+            
             res.status(200).json({response: 'The post was successfully deleted !!!'}).end();
         }
     }catch(error){
@@ -152,6 +170,11 @@ export const deleteManyPosts =  async (req: Request, res:Response)=>{
                 await client.query(query);
             }
 
+            for(const item of data.data){
+                if(cache.has(item)){
+                    cache.del(item);
+                }
+            }
             res.status(200).json({response: 'All the posts where deleted successfully !!!'}).end();
         }
     }catch(error){
