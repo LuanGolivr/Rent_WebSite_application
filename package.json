@@ -26,6 +26,7 @@
     "@types/node-cache": "^4.2.5",
     "@types/pg": "^8.11.6",
     "@types/validator": "^13.11.10",
+    "loadtest": "^8.0.9",
     "rimraf": "^5.0.7",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { json } from "express";
+import {loadTest} from "loadtest";
 import { createLogger, format,transports } from "winston";
 const {combine, timestamp, printf} = format;
 
@@ -17,7 +17,7 @@ const logger = createLogger({
         new transports.File({filename: '../logs/response_time_with_simple_cache.log'}),
     ]
 });
-
+/*
 async function makeRequest(url){
     const id = Math.floor((Math.random() * 100) + 1);
     url += `${id}`;
@@ -55,6 +55,18 @@ function start(){
         console.log(`Completed ${numberOfRequests} requests`);
     })
 }
+*/
+
+async function testLantency(){
+    const options = {
+        url: "http://localhost:8000/api/post/58",
+        maxRequests: 10000,
+        concurrency: 10000,
+    };
+
+    const result = await loadTest(options);
+    result.show();
+}
 
 
-start();
+testLantency();
