@@ -1,42 +1,103 @@
 import { Request, Response } from "express";
+import { LRUCache } from "lru-cache";
 import { client } from "../database/dbConnection.js";
 import { DeletePost, ManyPosts, Query } from "../utils/types.js";
 import { extractManyValues } from "../utils/queryBuilder.js";
 
+const cache = new LRUCache<string, any>({
+    max: 150,
+    ttl: 1000 * 60 * 5,
+    updateAgeOnGet: true,
+});
+
+const batching: Map<string, any[]> = new Map<string, any[]>();
 
 export const getSinglePost = async (req: Request, res: Response)=>{
-    try{
-        if(req.params.id){
-            const id = req.params.id;
-            
-            const query: Query = {
-                text: "SELECT * FROM posts WHERE id = $1",
-                values: [id]
-            }
+    if(req.params.id){
+        const id = req.params.id;
 
-            const response = await client.query(query);
-            res.status(200).json({data: response.rows[0]}).end();
+        if(batching.has(id)){
+            const queue = batching.get(id);
+            queue!.push(res);
+            batching.set(id, queue!);
+        }else{
+            batching.set(id, [res]);
+            const queue = batching.get(id);
+            try{
+                let result: any;
+                
+                if(cache.has(id)){
+                    result = cache.get(id);
+                }else{
+                    const query: Query = {
+                        text: "SELECT * FROM posts WHERE id = $1",
+                        values: [id]
+                    }
+        
+                    result = (await client.query(query)).rows[0];
+                    cache.set(id, result);
+                }
+
+                for(const res of queue!){
+                    res.status(200).json({data: result}).end();
+                }
+
+                batching.delete(id);
+            }catch(error){
+                for(const res of queue!){
+                    res.status(500).json({error: error}).end();
+                }
+
+                batching.delete(id);
+            }
         }
-    }catch(error){
-        res.status(500).json({error: error}).end();
+    }else{
+        res.status(500).json({error: 'Invalid id was provided'}).end();
     }
 };
 
 export const getManyPosts = async (req: Request, res:Response)=>{
-    try{
-        if(req.query.offset){
-            let offset = req.query.offset;
+    if(req.query.offset){
+        const offset = req.query.offset;
+        const keyOffset: string = `offset_${offset}`;
 
-            const query: Query = {
-                text: 'SELECT * FROM posts ORDER BY updated_at DESC LIMIT 20 OFFSET $1',
-                values: [offset]
-            };
+        if(batching.has(keyOffset)){
+            const queue = batching.get(keyOffset);
+            queue!.push(res);
+            batching.set(keyOffset, queue!);
+        }else{
+            batching.set(keyOffset, [res]);
+            const queue = batching.get(keyOffset);
 
-            const response = await client.query(query);
-            res.status(200).json({data: response.rows}).end();
+            try{
+                let result: any;
+
+                if(cache.has(keyOffset)){
+                    result = cache.get(keyOffset);
+                }else{
+                    const query: Query = {
+                        text: 'SELECT * FROM posts ORDER BY updated_at DESC LIMIT 20 OFFSET $1',
+                        values: [offset]
+                    };
+
+                    result = (await client.query(query)).rows;
+                }
+
+                for(const res of queue!){
+                    res.status(200).json({data: result}).end();
+                }
+
+                batching.delete(keyOffset);
+            }catch(error){
+                for(const res of queue!){
+                    res.status(500).json({error: error}).end();
+                }
+
+                batching.delete(keyOffset);
+            }
         }
-    }catch(error){
-        res.status(500).json({error: error}).end();
+    }else{
+        res.status(500).json({error: 'Invalid parameter was provided'}).end();
     }
 };
 
@@ -112,6 +173,7 @@ export const updateSinglePost = async (req: Request, res:Response)=>{
             }
 
             const response = await client.query(query);
+            cache.delete(id);
             res.status(200).json({data: response}).end();
         }
     }catch(error){
@@ -130,6 +192,7 @@ export const deleteSinglePost =  async (req: Request, res:Response)=>{
             }
 
             await client.query(query);
+            cache.delete(id);
             res.status(200).json({response: 'The post was successfully deleted !!!'}).end();
         }
     }catch(error){
@@ -150,6 +213,10 @@ export const deleteManyPosts =  async (req: Request, res:Response)=>{
                 console.log(query);
 
                 await client.query(query);
+            }
+
+            for(const item of data.data){
+                cache.delete(item.toString());
             }
 
             res.status(200).json({response: 'All the posts where deleted successfully !!!'}).end();

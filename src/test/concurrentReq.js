@@ -70,4 +70,4 @@ async function testLantency(){
 }
 
 
-testLantency();
+await testLantency();
