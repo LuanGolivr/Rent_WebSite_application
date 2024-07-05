@@ -19,16 +19,27 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
   api:
-    build:
+    build: 
       context: . #path to the docker file
       target: production #here we're refering to the stage in dockerfile
-    container_name: server
+    #container_name: server
     networks:
       - my_network
     depends_on:
       - db
     env_file:
       - .env
+    #ports:
+    #  - ${SERVER_PORT}:${SERVER_PORT}
+  
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+    networks:
+      - my_network
+    depends_on:
+      - api
     ports:
       - ${SERVER_PORT}:${SERVER_PORT}
 

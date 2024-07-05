@@ -26,6 +26,7 @@
     "@types/lru-cache": "^7.10.10",
     "@types/pg": "^8.11.6",
     "@types/validator": "^13.11.10",
+    "curl": "^0.1.4",
     "loadtest": "^8.0.9",
     "rimraf": "^5.0.7",
     "ts-node": "^10.9.2",

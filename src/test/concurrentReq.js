@@ -60,7 +60,8 @@ function start(){
 
 async function testLantency(){
     const options = {
-        url: "http://localhost:8000/api/post/58",
+        url: "http://localhost:3000/api/post/58",
+        //url: "http://localhost:8000/api/post?offset=0",
         maxRequests: 10000,
         concurrency: 10000,
     };

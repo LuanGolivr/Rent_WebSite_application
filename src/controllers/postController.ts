@@ -79,8 +79,8 @@ export const getManyPosts = async (req: Request, res:Response)=>{
                         text: 'SELECT * FROM posts ORDER BY updated_at DESC LIMIT 20 OFFSET $1',
                         values: [offset]
                     };
-
                     result = (await client.query(query)).rows;
+                    cache.set(keyOffset, result);
                 }
 
                 for(const res of queue!){

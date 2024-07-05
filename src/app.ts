@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
+import os from 'os';
 
 import postRouter from './routes/postRoutes.js';
 import { connectToDatabase } from './database/dbConnection.js';
@@ -21,8 +22,9 @@ server.use(express.urlencoded({extended: true}));
 })();
 
 server.get('/', (req: Request, res: Response) =>{
-    res.json({msg: 'everything is OK'});
-})
+    res.json({msg: os.hostname()});
+});
+
 server.use('/api', postRouter);
 
 server.use((req: Request, res: Response)=>{
