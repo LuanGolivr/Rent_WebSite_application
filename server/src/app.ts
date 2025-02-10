@@ -1,34 +1,43 @@
 import dotenv from 'dotenv';
-import express, {Request, Response} from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerOutput from './swagger_output.json';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
+
+import express, {Application, Request, Response} from 'express';
 import { PrismaClient } from '@prisma/client';
+import { StatusCodes } from 'http-status-codes';
 
 import userRouter from './routes/userRoutes.js';
 import propertyRouter from './routes/propertyRoutes.js';
 import wishListRouter from './routes/wishListRoutes.js';
-import { createClient } from 'redis';
+import uploadRoutes from './routes/uploadRoutes';
 
+import { CacheSystem } from './services/cacheSystem';
 
 dotenv.config();
-const server = express();
+const app: Application = express();
 
-server.use(cors());
-server.use(express.json());
-server.use(express.urlencoded({extended: true}));
-server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput));
+app.use(cors());
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(passport.initialize());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerOutput));
+
 
 export const prisma = new PrismaClient();
-//export const client = createClient().on('error', err => console.log('Redis Client Error', err)).connect();
 export const requestQueue: Map<string, Response[]> = new Map<string, Response[]>();
+export const cache: CacheSystem = new CacheSystem();
 
-server.get('/', (req: Request, res: Response)=> {
-    res.json({answer: true});
+app.get('/api/v1', (req: Request, res: Response)=> {
+    res.status(StatusCodes.OK).json({answer: true});
 });
 
-server.use('/api/v1',userRouter);
-server.use('/api/v1',propertyRouter);
-server.use('/api/v1', wishListRouter);
+app.use('/api/v1',userRouter);
+app.use('/api/v1',propertyRouter);
+app.use('/api/v1', uploadRoutes);
+app.use('/api/v1', wishListRouter);
 
-server.listen(process.env.PORT);
+app.listen(process.env.PORT);

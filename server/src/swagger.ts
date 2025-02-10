@@ -24,7 +24,39 @@ const doc = {
         {
             "name": "Properties",
         }
-    ]
+    ],
+    definitions: {
+        SingleProperty: {
+            id: 0,
+            available: true,
+            sellOrRent: "sell",
+            propertyType: "house",
+            title: "string",
+            description: "string",
+            street: "string",
+            neighborhood: "string",
+            city: "string",
+            state: "string",
+            furnished: true,
+            rooms: 0,
+            suites: 0,
+            bathrooms: 0,
+            parkingSpace: 0,
+            area: 100.50,
+            condominiumPrice: 100.50,
+            price: 100.50,
+            playground: true,
+            gym: true,
+            gourmetArea: true,
+            sportCourt: true,
+            pool: true,
+            warmPool: true,
+            greenArea: true,
+        },
+        ManyProperties: [
+            
+        ]
+    }
 };
 
 const outputFile = './swagger_output.json';

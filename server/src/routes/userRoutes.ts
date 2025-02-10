@@ -1,11 +1,21 @@
-import {Router, Request, Response} from 'express';
+import {Router} from 'express';
+
 import * as userController from '../controllers/userController.js';
+import { validateParams } from '../middlewares/validations/validationMiddleware.js';
+import { loginUserSchema, registerUserSchema } from '../schemas/userSchema.js';
+import passport from 'passport';
+import { AuthMiddleware } from '../auth/authMiddleware.js';
 
 const userRouter = Router();
+const authMiddleware = new AuthMiddleware();
 
-userRouter.get('/user/:id', userController.getUser);
+userRouter.post('/user/signup', validateParams(registerUserSchema), userController.createUser);
 
-userRouter.post('/user/signup', userController.createUser);
+userRouter.post('/user/login', validateParams(loginUserSchema), userController.login);
+
+userRouter.get('/user/logout', userController.logout);
+
+userRouter.get('/user/:id', authMiddleware.verifyJWT.bind(authMiddleware), userController.getUser);
 
 userRouter.put('/user/edit/:id', userController.editUser);
 

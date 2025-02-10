@@ -1,26 +1,19 @@
 import {Router} from 'express';
 import * as propertyController from '../controllers/propertyController.js';
 import { validateParams } from '../middlewares/validations/validationMiddleware.js';
-import { getManyPropertiesSchema, getsinglePropertySchema } from '../schemas/propertySchema.js';
+import { createPropertySchema, updatePropertySchema, deletePropertySchema } from '../schemas/propertySchema.js';
 
 const propertyRouter = Router();
 
+propertyRouter.get('/property/:id', propertyController.getSingleProperty);
 
-propertyRouter.get('/property/:id', validateParams(getsinglePropertySchema), propertyController.getSingleProperty);
+propertyRouter.get('/properties', propertyController.getProperties);
 
-propertyRouter.get('/properties', validateParams(getManyPropertiesSchema), propertyController.getProperties);
+propertyRouter.post('/property', validateParams(createPropertySchema), propertyController.createProperty);
 
-propertyRouter.post('/propperty', propertyController.createProperty);
+propertyRouter.patch('/property', validateParams(updatePropertySchema), propertyController.updateProperty);
 
-propertyRouter.post('/properties', propertyController.createManyProperties);
-
-propertyRouter.patch('/property/:id', propertyController.editProperty);
-
-propertyRouter.patch('/properties', propertyController.editManyProperties);
-
-propertyRouter.delete('/property/:id', propertyController.deleteProperty);
-
-propertyRouter.delete('/properties', propertyController.deleteManyProperties);
+propertyRouter.delete('/property', validateParams(deletePropertySchema), propertyController.deleteProperty);
 
 
 export default propertyRouter;

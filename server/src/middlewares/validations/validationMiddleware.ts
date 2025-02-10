@@ -1,5 +1,7 @@
 import {z, AnyZodObject, ZodError} from 'zod';
-import express, {Request, Response, NextFunction} from 'express';
+import {Request, Response, NextFunction} from 'express';
+import { StatusCodes } from 'http-status-codes';
+
 
 
 export const validateParams = (schema: AnyZodObject) => {
@@ -18,9 +20,9 @@ export const validateParams = (schema: AnyZodObject) => {
                     message: `${issue.path.join('.')} is ${issue.message}`,
                 }));
                 
-                res.status(400).json({error: "Invalid Data", details: errorMessages});
+                res.status(StatusCodes.BAD_REQUEST).json({error: "Invalid Data", details: errorMessages});
             }else {
-                res.status(500).json({error: "Internal Server Error"});
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error: "Internal Server Error"});
             }
         }
     };

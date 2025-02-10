@@ -21,8 +21,8 @@
         "tags": [
           "Properties"
         ],
-        "summary": "Some summary...",
-        "description": "Some description...",
+        "summary": "Endpoint to get a specific property",
+        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -35,49 +35,19 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      },
-      "patch": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleProperty"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleProperty"
+                }
+              }
             }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      },
-      "delete": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": ""
           }
         }
       }
@@ -87,17 +57,21 @@
         "tags": [
           "Properties"
         ],
+        "summary": "Endpoint to get a list of properties",
         "description": "",
         "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Internal Server Error"
+          "default": {
+            "description": ""
           }
         }
-      },
+      }
+    },
+    "/property": {
       "post": {
+        "tags": [
+          "Properties"
+        ],
+        "summary": "Endpoint to create a new property",
         "description": "",
         "responses": {
           "default": {
@@ -106,10 +80,87 @@
         }
       },
       "patch": {
+        "tags": [
+          "Properties"
+        ],
+        "summary": "Endpoint to update an existed property",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "example": "any"
+                  },
+                  "ownerId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Properties"
+        ],
+        "summary": "Endpoint to delete an existed property",
         "description": "",
         "responses": {
           "default": {
             "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "example": "any"
+                  },
+                  "ownerId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/property/upload": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "example": "any"
+                  },
+                  "propertyId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -122,8 +173,62 @@
         }
       }
     },
-    "/propperty": {
+    "/user/signup": {
       "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cpf": {
+                    "example": "any"
+                  },
+                  "password": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "example": "any"
+                  },
+                  "password": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/logout": {
+      "get": {
         "description": "",
         "responses": {
           "default": {
@@ -146,8 +251,8 @@
           }
         ],
         "responses": {
-          "default": {
-            "description": ""
+          "200": {
+            "description": "OK"
           }
         }
       },
@@ -163,16 +268,6 @@
             }
           }
         ],
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/user/signup": {
-      "post": {
-        "description": "",
         "responses": {
           "default": {
             "description": ""
@@ -206,6 +301,124 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "SingleProperty": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 0
+          },
+          "available": {
+            "type": "boolean",
+            "example": true
+          },
+          "sellOrRent": {
+            "type": "string",
+            "example": "sell"
+          },
+          "propertyType": {
+            "type": "string",
+            "example": "house"
+          },
+          "title": {
+            "type": "string",
+            "example": "string"
+          },
+          "description": {
+            "type": "string",
+            "example": "string"
+          },
+          "street": {
+            "type": "string",
+            "example": "string"
+          },
+          "neighborhood": {
+            "type": "string",
+            "example": "string"
+          },
+          "city": {
+            "type": "string",
+            "example": "string"
+          },
+          "state": {
+            "type": "string",
+            "example": "string"
+          },
+          "furnished": {
+            "type": "boolean",
+            "example": true
+          },
+          "rooms": {
+            "type": "number",
+            "example": 0
+          },
+          "suites": {
+            "type": "number",
+            "example": 0
+          },
+          "bathrooms": {
+            "type": "number",
+            "example": 0
+          },
+          "parkingSpace": {
+            "type": "number",
+            "example": 0
+          },
+          "area": {
+            "type": "number",
+            "example": 100.5
+          },
+          "condominiumPrice": {
+            "type": "number",
+            "example": 100.5
+          },
+          "price": {
+            "type": "number",
+            "example": 100.5
+          },
+          "playground": {
+            "type": "boolean",
+            "example": true
+          },
+          "gym": {
+            "type": "boolean",
+            "example": true
+          },
+          "gourmetArea": {
+            "type": "boolean",
+            "example": true
+          },
+          "sportCourt": {
+            "type": "boolean",
+            "example": true
+          },
+          "pool": {
+            "type": "boolean",
+            "example": true
+          },
+          "warmPool": {
+            "type": "boolean",
+            "example": true
+          },
+          "greenArea": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "xml": {
+          "name": "SingleProperty"
+        }
+      },
+      "ManyProperties": {
+        "type": "array",
+        "example": [],
+        "items": {},
+        "xml": {
+          "name": "ManyProperties"
+        }
       }
     }
   }
