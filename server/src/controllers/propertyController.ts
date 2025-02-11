@@ -1,6 +1,5 @@
 import { StatusCodes } from "http-status-codes";
 import { Request, Response } from "express";
-
 import { prisma, requestQueue } from "../app.js";
 import { cache } from "../app.js";
 import { PropertyQueryBuilder } from "../utils/propertyQueryBuilder.js";
@@ -17,7 +16,6 @@ export const getSingleProperty = async (req: Request, res: Response)=> {
         if(req.params.id){
             const id: string = req.params.id;
             const key = `property:${id}`;
-    
             if(requestQueue.has(key)){
                 const queue = requestQueue.get(key);
                 queue!.push(res);
@@ -25,7 +23,6 @@ export const getSingleProperty = async (req: Request, res: Response)=> {
             }else{
                 requestQueue.set(key, [res]);
                 const queue = requestQueue.get(key);
-    
                 try{
                     let result: any;
                     if(await cache.keyExists(key)){
@@ -39,10 +36,8 @@ export const getSingleProperty = async (req: Request, res: Response)=> {
                                 imageVideo: true
                             }   
                         });
-                        
                         cache.setData(key, result);
                     };
-    
                     for(const res of queue!){
                         res.status(StatusCodes.OK).json({data: result});
                     };
@@ -51,7 +46,6 @@ export const getSingleProperty = async (req: Request, res: Response)=> {
                         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
                     };
                 }
-                
                 requestQueue.delete(key);
             }
         }else{
@@ -67,7 +61,6 @@ export const getProperties = async (req: Request, res: Response)=> {
     // #swagger.summary = 'Endpoint to get a list of properties'
     const params = req.query;
     const key: string = `properties:${JSON.stringify(params)}`;
-
     if(requestQueue.has(key)){
         const queue = requestQueue.get(key);
         queue!.push(res);
@@ -75,16 +68,13 @@ export const getProperties = async (req: Request, res: Response)=> {
     }else{
         requestQueue.set(key, [res]);
         const queue = requestQueue.get(key);
-        
         try{
             let result: any;
             const queryBuilder = new PropertyQueryBuilder(params);
-
             queryBuilder.buildQuery();
             const query = queryBuilder.getQuery();
             const skip: number = queryBuilder.getPage();
             const take: number = queryBuilder.getLimit();
-
             result = await prisma.property.findMany({
                 where: query,
                 include: {
@@ -93,17 +83,14 @@ export const getProperties = async (req: Request, res: Response)=> {
                 skip: ((skip * 10) - 10),
                 take: take,
             });
-
             for(const res of queue!){
                 res.status(StatusCodes.OK).json({data: result});
             }
-
         }catch(error){
             for(const res of queue!){
                 res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
             }
         }
-
         requestQueue.delete(key);
     }
 };
@@ -113,11 +100,9 @@ export const createProperty = async (req: Request, res: Response)=> {
     // #swagger.summary = 'Endpoint to create a new property'
     try {
         const propertyData = req.body;
-        
         const property = await prisma.property.create({
             data: propertyData,
         });
-
         res.status(StatusCodes.CREATED).json({property});
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
@@ -130,24 +115,24 @@ export const deleteProperty = async (req: Request, res: Response)=> {
     try {
         const id: string = req.body.id;
         const ownerId: string = req.body.ownerId;
-
+        /*
+        Check this part again
+        await prisma.imageVideo.delete({
+            where: {
+                propertyId: id
+            }
+        });
         const property = await prisma.property.delete({
             where: {
                 id: id,
                 ownerId: ownerId
+            },
+            include:{
+                imageVideo: true
             }
         });
-
-        if(property){
-            await prisma.imageVideo.delete({
-                where: {
-                    propertyId: id,
-                }
-            });
-
-            await cache.deleteData(`property:${id}`);
-        }
-
+        */
+        await cache.deleteData(`property:${id}`);
         res.status(StatusCodes.ACCEPTED).json({message: 'Property was deleted successfully'});
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
@@ -161,7 +146,6 @@ export const updateProperty = async (req: Request, res: Response)=> {
         if(req.body.id){
             const propertyId: string = req.body.id;
             const propertyData = req.body;
-
             const property =  await prisma.property.update({
                 where: {
                     id: propertyId,
@@ -172,7 +156,6 @@ export const updateProperty = async (req: Request, res: Response)=> {
                     imageVideo: true
                 }
             });
-
             res.status(StatusCodes.ACCEPTED).json({data: property});
         }else{
             res.json(StatusCodes.BAD_REQUEST).json({message: 'Invalid propertyId provided'});

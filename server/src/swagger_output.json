@@ -200,6 +200,26 @@
         }
       }
     },
+    "/user/active/{activeToken}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "activeToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/user/login": {
       "post": {
         "description": "",

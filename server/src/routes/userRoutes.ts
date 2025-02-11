@@ -1,15 +1,15 @@
 import {Router} from 'express';
-
 import * as userController from '../controllers/userController.js';
 import { validateParams } from '../middlewares/validations/validationMiddleware.js';
 import { loginUserSchema, registerUserSchema } from '../schemas/userSchema.js';
-import passport from 'passport';
 import { AuthMiddleware } from '../auth/authMiddleware.js';
 
 const userRouter = Router();
 const authMiddleware = new AuthMiddleware();
 
 userRouter.post('/user/signup', validateParams(registerUserSchema), userController.createUser);
+
+userRouter.get('/user/active/:activeToken', userController.activeAccount);
 
 userRouter.post('/user/login', validateParams(loginUserSchema), userController.login);
 

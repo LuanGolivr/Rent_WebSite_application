@@ -7,14 +7,12 @@ export const uploadImageOrVideo = async (req: Request, res: Response)=> {
         const uploadedFiles = req.files;
         const userId: string = req.body.userId;
         const propertyId: string = req.body.propertyId;
-        
         const property = await prisma.property.findFirst({
             where: {
                 ownerId: userId,
                 id: propertyId
             },
         });
-        
         if(property && Array.isArray(uploadedFiles)){
             uploadedFiles.forEach(async (item) => {
                 await prisma.imageVideo.create({
@@ -27,7 +25,6 @@ export const uploadImageOrVideo = async (req: Request, res: Response)=> {
                     }
                 });
             });
-
             res.status(StatusCodes.CREATED).json({message: 'The files were added successfully'});
         }else{
             res.status(StatusCodes.NOT_FOUND).json({message: "It wasn't possible to find a property with the given parameters"});
