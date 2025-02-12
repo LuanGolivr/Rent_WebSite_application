@@ -22,24 +22,25 @@ export const createUser = async (req: Request, res: Response)=> {
         if(user === null){
             const passwordHashed = await bcrypt.hash(newUserInfos.password, 8);
             newUserInfos.password = passwordHashed;
+            
             crypto.randomBytes(20, async (err, buf)=>{
                 const user = await prisma.user.create({
                     data: newUserInfos
                 });
                 const activeToken = user.id + buf.toString('hex');
                 const activeExpires = Date.now() + 24 * 3600* 1000;
-                const link: string = `http://localhost:3000/api/v1/user/active/${newUserInfos.activeToken}`;
+                const link: string = `http://localhost:3000/api/v1/user/active/${activeToken}`;
                 await prisma.user.update({
                     where: {
                         id: user.id
                     },
                     data: {
-                        activeToken,
-                        activeExpires
+                        activeToken: activeToken,
+                        activeExpires: activeExpires
                     }
                 });
                 mail.sendActivationCode({
-                    to: "luangoncalvesoliveira@gmail.com",
+                    to: "teste@teste.com",
                     subject: "Welcome",
                     html: `Please click <a href="${link}"> here </a> to activate your account.`
                 });
@@ -61,7 +62,7 @@ export const activeAccount = async (req: Request, res: Response)=>{
                 activeToken: activeToken,
             }
         });
-        if(user && !user.isVerified && user.activeExpires >= Date.now()){
+        if(user && !user.isVerified && user.activeExpires !== null && user.activeExpires >= Date.now()){
             await prisma.user.update({
                 where: {
                     id: user.id
@@ -75,7 +76,6 @@ export const activeAccount = async (req: Request, res: Response)=>{
             res.status(StatusCodes.BAD_REQUEST).json({message: "fail to activate or your account is already active"});
         }        
     } catch (error) {
-        console.log('double shit')
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
 }

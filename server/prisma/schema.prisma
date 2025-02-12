@@ -24,7 +24,7 @@ model User{
   phoneNumber String? @unique
   isVerified Boolean @default(false)
   activeToken String @default("")
-  activeExpires Int
+  activeExpires BigInt?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   properties Property[]
