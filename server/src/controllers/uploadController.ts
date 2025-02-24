@@ -28,9 +28,7 @@ export const uploadImageOrVideo = async (req: Request, res: Response)=> {
             res.status(StatusCodes.CREATED).json({message: 'The files were added successfully'});
         }else{
             res.status(StatusCodes.NOT_FOUND).json({message: "It wasn't possible to find a property with the given parameters"});
-        }
-
-        
+        }        
     }catch(error){
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }

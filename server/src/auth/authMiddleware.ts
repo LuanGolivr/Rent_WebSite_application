@@ -12,7 +12,6 @@ export class AuthMiddleware {
 
     public async verifyJWT(req: Request, res: Response, next: NextFunction){
         const token = this.extractToken(req);
-        console.log('token', token);
         await this.verifyToken(req, res, next, token);
     }
 
@@ -24,19 +23,20 @@ export class AuthMiddleware {
     }
 
     private async verifyToken(req: Request, res: Response, next: NextFunction, token: string ){
-        return jwt.verify(token, this.secretKey, async (err: any, decoded: any) => {
-            if(err){
-                return res.status(StatusCodes.BAD_REQUEST).json({error: err});
+        return jwt.verify(token, this.secretKey, async (error: any, decoded: any) => {
+            if(error){
+                return res.status(StatusCodes.BAD_REQUEST).json({error});
             }
-            req.body.id = decoded.id;
-            const user = prisma.user.findFirst({
+            const id = decoded.id;
+            const user = await prisma.user.findFirst({
                 where: {
-                    id: req.body.id
+                    id: id
                 }
             });
             if(!user){
-                res.status(StatusCodes.BAD_REQUEST).json({error: "User does not exist"});
+                res.status(StatusCodes.NOT_FOUND).json({error: "User does not exist"});
             }
+            req.userId = user!.id;
             next();
         });
     }

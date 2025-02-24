@@ -22,12 +22,15 @@ export class MailService{
         });
     };
 
-    async sendActivationCode(mail: {}){
+    async send(mail: {}){
         mail = Object.assign({}, this.defaultMail, mail);
-        console.log('mail', mail)
         this.transporter.sendMail(mail, (error, info)=>{
             if(error) return console.error(error);
             console.info('mail sent:', info.response);
         });
     };
+
+    async sendResetPasswordCode(){
+        
+    }
 }
