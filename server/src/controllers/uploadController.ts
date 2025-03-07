@@ -7,28 +7,36 @@ export const uploadImageOrVideo = async (req: Request, res: Response)=> {
         const uploadedFiles = req.files;
         const userId: string = req.body.userId;
         const propertyId: string = req.body.propertyId;
-        const property = await prisma.property.findFirst({
+        const user = await prisma.user.findFirstOrThrow({
             where: {
-                ownerId: userId,
-                id: propertyId
-            },
+                id: userId
+            }
         });
-        if(property && Array.isArray(uploadedFiles)){
-            uploadedFiles.forEach(async (item) => {
-                await prisma.imageVideo.create({
-                    data: {
-                        propertyId: propertyId,
-                        originalName: item.originalname,
-                        mimeType: item.mimetype,
-                        size: item.size,
-                        url: item.path
-                    }
-                });
+
+        if(user.isAgent){
+            await prisma.property.findUniqueOrThrow({
+                where: {
+                    ownerId: userId,
+                    id: propertyId
+                },
             });
-            res.status(StatusCodes.CREATED).json({message: 'The files were added successfully'});
+            if(Array.isArray(uploadedFiles)){
+                uploadedFiles.forEach(async (item) => {
+                    await prisma.imageVideo.create({
+                        data: {
+                            propertyId: propertyId,
+                            originalName: item.originalname,
+                            mimeType: item.mimetype,
+                            size: item.size,
+                            url: item.path
+                        }
+                    });
+                });
+                res.status(StatusCodes.CREATED).json({message: 'The files were added successfully'});
+            } 
         }else{
-            res.status(StatusCodes.NOT_FOUND).json({message: "It wasn't possible to find a property with the given parameters"});
-        }        
+            res.status(StatusCodes.FORBIDDEN).json({message: "You must be an Agent to upload a file!"});
+        }     
     }catch(error){
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
@@ -36,7 +44,15 @@ export const uploadImageOrVideo = async (req: Request, res: Response)=> {
 
 export const deleteImageOrVideo = async (req: Request, res: Response)=> {
     try{
-        
+        const fileId: string = req.body.id;
+        const propertyId: string = req.body.propertyId;
+        await prisma.imageVideo.delete({
+            where: {
+                id: fileId,
+                propertyId: propertyId
+            }
+        });
+        res.status(StatusCodes.OK).json({message: "File deleted successfully!"});
     }catch(error){
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }

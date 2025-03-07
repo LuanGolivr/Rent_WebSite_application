@@ -55,10 +55,10 @@ export const loginUserSchema = z.object({
     })
 });
 
-export const requestPasswordResetSchema = z.object({
+export const requestEditSensitiveDataSchema = z.object({
     body: z.object({
             email: z.string({
-                required_error: 'Rmail is required to request the reset of the password',
+                required_error: 'Email is required to request the update of sensitive data',
                 invalid_type_error: "The email must be a string"
             }).email({
                 message: "The email provided must be a valid one"
@@ -66,12 +66,46 @@ export const requestPasswordResetSchema = z.object({
     })
 });
 
-export const resetPasswordSchema = z.object({
+export const checkUpdateSensitiveDataTokenSchema = z.object({
+    body: z.object({
+        email: z.string({
+            required_error: 'Email is required',
+            invalid_type_error: "The email must be a string"
+        }).email({
+            message: "The email provided must be a valid one"
+        }),
+        token: z.string({
+            required_error: "Token is required"
+        })
+    })
+});
+
+export const updateSensitiveDataSchema = z.object({
     body:  z.object({
         password: z.string({
             invalid_type_error: 'The new password must be a string',
-            required_error: "Password is required"
-        })
+        }).optional(),
+
+        cpf: z.string({
+            invalid_type_error: "CPF must be a string"
+        }).max(14, {
+            message: "Your CPF can not be larger than 14 characters ie: 000.000.000-00"
+        }).optional(),
+
+        email: z.string({
+            required_error: "Email is required",
+            invalid_type_error: "The email must be a string"
+        }).email({
+            message: "The email provided must be a valid one"
+        }),
+
+        phoneNumber: z.string({
+            invalid_type_error: "Phone number must be a string"
+        }).optional(),
+
+        token: z.string({
+            required_error: "Token is required"
+        })        
     })
 });
 

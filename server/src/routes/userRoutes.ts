@@ -1,7 +1,15 @@
 import {Router} from 'express';
 import * as userController from '../controllers/userController.js';
 import { validateParams } from '../middlewares/validations/validationMiddleware.js';
-import { deleteAccountSchema, loginUserSchema, registerUserSchema, updateNonSensitiveDataSchema } from '../schemas/userSchema.js';
+import { 
+    checkUpdateSensitiveDataTokenSchema, 
+    deleteAccountSchema, 
+    loginUserSchema, 
+    registerUserSchema, 
+    requestEditSensitiveDataSchema, 
+    updateNonSensitiveDataSchema, 
+    updateSensitiveDataSchema 
+} from '../schemas/userSchema.js';
 import { AuthMiddleware } from '../auth/authMiddleware.js';
 
 const userRouter = Router();
@@ -11,11 +19,13 @@ userRouter.post('/user/signup', validateParams(registerUserSchema), userControll
 
 userRouter.post('/user/requestActivationToken', userController.requestActivationToken);
 
-userRouter.get('/user/active/:activeToken', userController.activeAccount);
+userRouter.get('/user/active/:activeToken/:id', userController.activeAccount);
 
-//userRouter.post('/user/requestPasswordReset', validateParams(requestPasswordResetSchema), userController.requestPasswordReset);
+userRouter.post('/user/request/edit/sensitive/data', validateParams(requestEditSensitiveDataSchema), userController.requestEditSensitiveDataReset);
 
-//userRouter.post('/user/resetPassword', validateParams(resetPasswordSchema), userController.resetPassword);
+userRouter.post("/user/check/sensitive/data/token", validateParams(checkUpdateSensitiveDataTokenSchema), userController.checkResetSensitiveDataToken);
+
+userRouter.post('/user/edit/senstive/data', validateParams(updateSensitiveDataSchema), userController.editSensitiveData);
 
 userRouter.post('/user/login', validateParams(loginUserSchema), userController.login);
 

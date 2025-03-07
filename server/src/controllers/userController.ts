@@ -3,14 +3,16 @@ import { StatusCodes } from "http-status-codes";
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
 import { prisma } from "../app";
 import { MailService } from "../services/mail";
-import { createRandomToken } from "../utils";
+import { createRandomNanoId, createRandomToken } from "../utils";
+import { CacheSystem } from "../services/cacheSystem";
 
 dotenv.config();
 const mail = new MailService();
+const activationCodesCache = new CacheSystem();
+const sensitiveDataCache = new CacheSystem();
 
 export const createUser = async (req: Request, res: Response)=> {
     try {
@@ -20,16 +22,27 @@ export const createUser = async (req: Request, res: Response)=> {
                 cpf: newUserInfos.cpf
             }
         });
+        
         if(user === null){
+            console.log('here')
             const passwordHashed: string = await bcrypt.hash(newUserInfos.password, 8);
             newUserInfos.password = passwordHashed;
             const user = await prisma.user.create({
                 data: newUserInfos
             });
-            await setActivationToken(user.id);
+            const activeToken: string = createRandomToken(user.id);
+            const activeExpires: number = Date.now() + 24 * 3600* 1000;
+            const link: string = `http://localhost:3000/api/v1/user/active/${activeToken}/${user.id}`;
+            activationCodesCache.setData(user.id, activeToken, activeExpires);
+            await mail.send({
+                to: user.email,
+                subject: "Welcome",
+                html: `Please click <a href="${link}"> here </a> to activate your account.`
+            });
             res.status(StatusCodes.CREATED).json({message: "User created successfully !!"});
+        }else{
+            res.status(StatusCodes.CONFLICT).json({message: "User does already exist !!!"});
         }
-        res.status(StatusCodes.CONFLICT).json({message: "User does already exist !!!"});
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
     }
@@ -38,18 +51,19 @@ export const createUser = async (req: Request, res: Response)=> {
 export const activeAccount = async (req: Request, res: Response)=>{
     try {
         const activeToken = req.params.activeToken;
-        const user = await prisma.user.findFirst({
+        const userId = req.params.id;
+        const user = await prisma.user.findFirstOrThrow({
             where: {
-                activeToken: activeToken,
+                id: userId,
             }
         });
         if(!user){
             res.status(StatusCodes.NOT_FOUND).json({message: "User does not exist"});
         }
-        if(user?.isVerified){
+        if(user.isVerified){
             res.status(StatusCodes.CONFLICT).json({message: "fail to activate or your account is already active"});
         }
-        if(user && user.activeExpires !== null && user.activeExpires >= Date.now()){
+        if(await activationCodesCache.keyExists(userId) && activeToken === await activationCodesCache.getData(userId)){
             await prisma.user.update({
                 where: {
                     id: user.id
@@ -58,9 +72,11 @@ export const activeAccount = async (req: Request, res: Response)=>{
                     isVerified: true
                 }
             });
+            await activationCodesCache.deleteData(user.id);
             res.status(StatusCodes.OK).json({message: "activation success!"});
-        }
-        res.status(StatusCodes.BAD_REQUEST).json({message: "Activation token has expired, request a new one!"});       
+        }else{
+            res.status(StatusCodes.BAD_REQUEST).json({message: "Activation token has expired, request a new one!"});
+        }   
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }
@@ -69,48 +85,44 @@ export const activeAccount = async (req: Request, res: Response)=>{
 export const requestActivationToken = async (req: Request, res: Response) => {
     try {
         const userId: string = req.body.id;
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findFirstOrThrow({
             where: {
                 id: userId
             }
         });
-        if(user){
-            setActivationToken(user.id);
-            res.status(StatusCodes.OK).json({message: "The new activation code was sent to you e-mail"});
-        }
-        res.status(StatusCodes.NOT_FOUND).json({message: "User does not exist"});
+        const activeToken: string = createRandomToken(user.id);
+        const activeExpires: number = Date.now() + 24 * 3600* 1000;
+        const link: string = `http://localhost:3000/api/v1/user/active/${activeToken}/${user.id}`;
+        activationCodesCache.setData(user.id, activeToken, activeExpires);
+        mail.send({
+            to: user.email,
+            subject: "Welcome",
+            html: `Please click <a href="${link}"> here </a> to activate your account.`
+        });
+        res.status(StatusCodes.OK).json({message: "The new activation code was sent to you e-mail"});
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
     }
 }
-/*
-export const requestPasswordReset = async (req: Request, res: Response)=>{
+
+export const requestEditSensitiveDataReset = async (req: Request, res: Response)=>{
     try {
         const userEmail: string = req.body.email;
-        const user = await prisma.user.findFirst({
+        const user = await prisma.user.findFirstOrThrow({
             where: {
                 email: userEmail
             }
         });
         if(user){
-            const token: string = createRandomToken(user.id);
+            const token: string = createRandomNanoId();
             const resetPasswordExpires: number = Date.now() + 24 * 3600* 1000;
-            const link: string = `http://localhost:5000/signin/resetPassword/${token}`;
-            await prisma.user.update({
-                where: {
-                    id: user.id
-                },
-                data: {
-                    resetPasswordToken: token,
-                    resetPasswordExpires: resetPasswordExpires
-                }
-            });
+            await sensitiveDataCache.setData(user.email, token, resetPasswordExpires);
             mail.send({
                 to: user.email,
                 subject: "Password reset request",
                 text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-                    Please click on the  following link or paste it into your browser to continue the process:\n\n
-                    ${link}\n\n
+                    Please copy and paste the token bellow into your browser to continue the process:\n\n
+                    ${token}\n\n
                     If you did not request this, please ignore this email and your password will remain unchanged.\n`,
             });
             res.status(StatusCodes.OK);
@@ -121,56 +133,20 @@ export const requestPasswordReset = async (req: Request, res: Response)=>{
     }
 }
 
-export const checkResetPasswordToken = async (req: Request, res: Response) => {
+export const checkResetSensitiveDataToken = async (req: Request, res: Response) => {
     try {
         const token: string = req.body.token;
-        const user = await prisma.user.findFirst({
-            where: {
-                resetPasswordToken: token
-            }
-        });
-        if(!user){
-            res.status(StatusCodes.NOT_FOUND).json("User does not exist");
-        };
-        if(user && user.resetPasswordExpires !== null && user.resetPasswordExpires <= Date.now()){
+        const email: string = req.body.email;
+        if(await sensitiveDataCache.keyExists(email) && await sensitiveDataCache.getData(email) === token){
             res.status(StatusCodes.OK);
-        };
-        res.status(StatusCodes.BAD_REQUEST).json("Token has expired, request a new one!");
+        }else{
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json("The token has expired or a wrong token was provided");
+        }
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
     }
 }
 
-export const resetPassword = async(req: Request, res: Response)=>{
-    try {
-        const password: string = req.body.password;
-        const email: string = req.body.email;
-        const user = await prisma.user.findUniqueOrThrow({
-            where: {
-                email
-            }
-        });
-        if(!user){
-            res.status(StatusCodes.NOT_FOUND).json("User does not exist");
-        }
-        if(user && user.resetPasswordExpires !== null && user.resetPasswordExpires <= Date.now()){
-            const passwordHashed: string = await bcrypt.hash(password, 8);
-            await prisma.user.update({
-                where: {
-                    email
-                },
-                data: {
-                    password: passwordHashed
-                }
-            });
-            res.status(StatusCodes.OK).json("Password was succssefully changed");
-        }
-        res.status(StatusCodes.BAD_REQUEST).json("Link has expired, request a new one!");
-    } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
-    }
-};
-*/
 export const login = async (req: Request, res: Response)=>{
     try {
         const formInfos = req.body;
@@ -194,7 +170,7 @@ export const login = async (req: Request, res: Response)=>{
                 path: '/',
                 maxAge: 86400000
             });
-            const {password, activeExpires, activeToken, isVerified, cpf, ...userInfos} = user;
+            const {password, isVerified, cpf, ...userInfos} = user;
             res.status(StatusCodes.OK).json({data: userInfos});
         }else{
             res.status(StatusCodes.NOT_FOUND).json({message: 'User not found or email is incorrect'});
@@ -222,7 +198,7 @@ export const getUser = async (req: Request, res: Response)=> {
             }
         });
         if(user){
-            const {password, activeExpires, activeToken, isVerified, cpf, ...userInfos} = user;
+            const {password, isVerified, cpf, ...userInfos} = user;
             res.status(StatusCodes.OK).json(userInfos);
         }else{
             res.status(StatusCodes.NOT_FOUND).json({message: "User was not found"});
@@ -236,8 +212,6 @@ export const editNonSensitiveData = async (req: Request, res: Response)=> {
     try {
         const authId = req.userId;
         const userInfos = req.body;
-        console.log('authId', authId);
-        console.log('userInfos', userInfos);
         if(userInfos.id === authId){
             const user = await prisma.user.update({
                 where: {
@@ -245,7 +219,7 @@ export const editNonSensitiveData = async (req: Request, res: Response)=> {
                 },
                 data: userInfos
             });
-            const {password, cpf, activeToken, activeExpires, ...userUpdatedInfos} = user;
+            const {password, cpf, ...userUpdatedInfos} = user;
             res.status(StatusCodes.OK).json({userUpdatedInfos});
         }else{
             res.status(StatusCodes.FORBIDDEN).json({message: "The given id is not the same as yours"});
@@ -256,7 +230,30 @@ export const editNonSensitiveData = async (req: Request, res: Response)=> {
 };
 
 export const editSensitiveData = async (req: Request, res: Response) => {
-
+    try {
+        const {token, ...data} = req.body;
+        let user = await prisma.user.findUniqueOrThrow({
+            where:{
+                email: data.email
+            }
+        });
+        if(await sensitiveDataCache.keyExists(user.email) && await sensitiveDataCache.getData(user.email) === token){
+            if(data.password){
+                const passwordHashed: string = await bcrypt.hash(data.password, 8);
+                data.password = passwordHashed;
+            }
+            user = await prisma.user.update({
+                where: {
+                    id: user.id
+                },
+                data: data
+            });
+            await sensitiveDataCache.deleteData(user.email); 
+            res.status(StatusCodes.OK).json("Sensitive data has been updated successfully!!!");
+        }
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
+    }
 }
 
 export const deleteUser = async (req: Request, res: Response)=> {
@@ -277,22 +274,3 @@ export const deleteUser = async (req: Request, res: Response)=> {
     }
 };
 
-async function setActivationToken(userId: string){
-    const activeToken: string = createRandomToken(userId); 
-    const activeExpires: number = Date.now() + 24 * 3600* 1000;
-    const link: string = `http://localhost:3000/api/v1/user/active/${activeToken}`;
-    const user = await prisma.user.update({
-        where: {
-            id: userId
-        },
-        data: {
-            activeToken: activeToken,
-            activeExpires: activeExpires
-        }
-    });
-    mail.send({
-        to: user.email,
-        subject: "Welcome",
-        html: `Please click <a href="${link}"> here </a> to activate your account.`
-    });
-};

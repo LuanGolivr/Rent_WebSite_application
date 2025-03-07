@@ -6,9 +6,11 @@ import { PropertyQueryBuilder } from "../utils/propertyQueryBuilder.js";
 
 
 export const getSingleProperty = async (req: Request, res: Response)=> {
-    // #swagger.tags = ["Properties"]
-    // #swagger.summary = 'Endpoint to get a specific property'
-    /* #swagger.responses[200] = {
+    /*
+    #swagger.tags = ["Properties"]
+    #swagger.summary = 'Returns a property by id'
+    #swagger.description = 'This endpoint will get a specific property by its id...'
+    #swagger.responses[200] = {
         schema: { $ref: '#/definitions/SingleProperty' }
     }
     */
@@ -96,14 +98,36 @@ export const getProperties = async (req: Request, res: Response)=> {
 };
 
 export const createProperty = async (req: Request, res: Response)=> {
-    // #swagger.tags = ["Properties"]
-    // #swagger.summary = 'Endpoint to create a new property'
+    /*
+        #swagger.tags = ["Properties"]
+        #swagger.summary = 'Creates a new property'
+        #swagger.description = 'This endpoint will create a new property...'
+        #swagger.requestBody = {
+            required: true,
+            content: {
+                "application/json": {
+                    schema: {
+                        $ref: "#/components/schemas/createPropertyBody"
+                    }
+                }
+            }
+        }
+    */
     try {
         const propertyData = req.body;
-        const property = await prisma.property.create({
-            data: propertyData,
+        const user = await prisma.user.findFirstOrThrow({
+            where: {
+                id: propertyData.ownerId
+            }
         });
-        res.status(StatusCodes.CREATED).json({property});
+        if(user.isAgent){
+            const property = await prisma.property.create({
+                data: propertyData,
+            });
+            res.status(StatusCodes.CREATED).json({property});
+        }else{
+            res.status(StatusCodes.FORBIDDEN).json({message: "You have to be an Agent to add a new property!"});
+        }
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({error});
     }
@@ -115,25 +139,14 @@ export const deleteProperty = async (req: Request, res: Response)=> {
     try {
         const id: string = req.body.id;
         const ownerId: string = req.body.ownerId;
-        /*
-        Check this part again
-        await prisma.imageVideo.delete({
-            where: {
-                propertyId: id
-            }
-        });
-        const property = await prisma.property.delete({
+        await prisma.property.delete({
             where: {
                 id: id,
                 ownerId: ownerId
             },
-            include:{
-                imageVideo: true
-            }
         });
-        */
         await cache.deleteData(`property:${id}`);
-        res.status(StatusCodes.ACCEPTED).json({message: 'Property was deleted successfully'});
+        res.status(StatusCodes.OK).json({message: 'Property was deleted successfully'});
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error);
     }

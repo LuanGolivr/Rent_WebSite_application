@@ -23,8 +23,6 @@ model User{
   isAgent Boolean @default(false)
   phoneNumber String? @unique
   isVerified Boolean @default(false)
-  activeToken String @default("")
-  activeExpires BigInt?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   properties Property[]
@@ -59,9 +57,9 @@ model Property {
   greenArea Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  owner User @relation(fields: [ownerId], references: [id])
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String
-  wishList PropertiesOnWishList[]
+  wishList WishList []
   imageVideo ImageVideo[]
 }
 
@@ -71,18 +69,9 @@ model WishList {
   updatedAt DateTime @updatedAt
   user User @relation(fields: [userId], references: [id])
   userId String @unique
-  properties PropertiesOnWishList[]
+  properties Property[]
 }
 
-model PropertiesOnWishList {
-  property Property @relation(fields: [propertyId], references: [id])
-  propertyId String
-  wishList WishList @relation(fields: [wishListId], references: [id])
-  wishListId String
-  assignedAt DateTime @default(now())
-  
-  @@id([propertyId, wishListId])
-}
 
 model ImageVideo {
   id String @id @default(uuid())
@@ -92,6 +81,6 @@ model ImageVideo {
   url String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  property Property @relation(fields: [propertyId], references: [id])
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId String
 }

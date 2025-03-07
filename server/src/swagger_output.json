@@ -21,8 +21,8 @@
         "tags": [
           "Properties"
         ],
-        "summary": "Endpoint to get a specific property",
-        "description": "",
+        "summary": "Returns a property by id",
+        "description": "This endpoint will get a specific property by its id...",
         "parameters": [
           {
             "name": "id",
@@ -71,11 +71,21 @@
         "tags": [
           "Properties"
         ],
-        "summary": "Endpoint to create a new property",
-        "description": "",
+        "summary": "Creates a new property",
+        "description": "This endpoint will create a new property...",
         "responses": {
           "default": {
             "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createPropertyBody"
+              }
+            }
           }
         }
       },
@@ -170,6 +180,23 @@
           "default": {
             "description": ""
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "example": "any"
+                  },
+                  "propertyId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -224,7 +251,7 @@
         }
       }
     },
-    "/user/active/{activeToken}": {
+    "/user/active/{activeToken}/{id}": {
       "get": {
         "description": "",
         "parameters": [
@@ -235,11 +262,97 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "default": {
             "description": ""
+          }
+        }
+      }
+    },
+    "/user/request/edit/sensitive/data": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/check/sensitive/data/token": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "example": "any"
+                  },
+                  "email": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/edit/senstive/data": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "example": "any"
+                  },
+                  "data": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -348,118 +461,548 @@
           }
         }
       }
+    },
+    "/wishlist": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "example": "any"
+                  },
+                  "propertyId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "example": "any"
+                  },
+                  "propertyId": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
-      }
-    },
     "schemas": {
+      "createPropertyBody": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "object"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number",
+                "example": 0
+              },
+              "available": {
+                "type": "boolean",
+                "example": true
+              },
+              "sellOrRent": {
+                "type": "string",
+                "example": "sell"
+              },
+              "propertyType": {
+                "type": "string",
+                "example": "house"
+              },
+              "title": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "string"
+              },
+              "street": {
+                "type": "string",
+                "example": "string"
+              },
+              "neighborhood": {
+                "type": "string",
+                "example": "string"
+              },
+              "city": {
+                "type": "string",
+                "example": "string"
+              },
+              "state": {
+                "type": "string",
+                "example": "string"
+              },
+              "furnished": {
+                "type": "boolean",
+                "example": true
+              },
+              "rooms": {
+                "type": "number",
+                "example": 0
+              },
+              "suites": {
+                "type": "number",
+                "example": 0
+              },
+              "bathrooms": {
+                "type": "number",
+                "example": 0
+              },
+              "parkingSpace": {
+                "type": "number",
+                "example": 0
+              },
+              "area": {
+                "type": "number",
+                "example": 100.5
+              },
+              "condominiumPrice": {
+                "type": "number",
+                "example": 100.5
+              },
+              "price": {
+                "type": "number",
+                "example": 100.5
+              },
+              "playground": {
+                "type": "boolean",
+                "example": true
+              },
+              "gym": {
+                "type": "boolean",
+                "example": true
+              },
+              "gourmetArea": {
+                "type": "boolean",
+                "example": true
+              },
+              "sportCourt": {
+                "type": "boolean",
+                "example": true
+              },
+              "pool": {
+                "type": "boolean",
+                "example": true
+              },
+              "warmPool": {
+                "type": "boolean",
+                "example": true
+              },
+              "greenArea": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "required": {
+            "type": "array",
+            "example": [
+              "available",
+              "sellOrRent",
+              "propertyType",
+              "title",
+              "description",
+              "street",
+              "neighborhood",
+              "city",
+              "state",
+              "furnished",
+              "rooms",
+              "suites",
+              "bathrooms",
+              "parkingSpace",
+              "area",
+              "price",
+              "ownerId"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "xml": {
+          "name": "createPropertyBody"
+        }
+      },
       "SingleProperty": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "number",
-            "example": 0
-          },
-          "available": {
-            "type": "boolean",
-            "example": true
-          },
-          "sellOrRent": {
+          "type": {
             "type": "string",
-            "example": "sell"
+            "example": "object"
           },
-          "propertyType": {
-            "type": "string",
-            "example": "house"
-          },
-          "title": {
-            "type": "string",
-            "example": "string"
-          },
-          "description": {
-            "type": "string",
-            "example": "string"
-          },
-          "street": {
-            "type": "string",
-            "example": "string"
-          },
-          "neighborhood": {
-            "type": "string",
-            "example": "string"
-          },
-          "city": {
-            "type": "string",
-            "example": "string"
-          },
-          "state": {
-            "type": "string",
-            "example": "string"
-          },
-          "furnished": {
-            "type": "boolean",
-            "example": true
-          },
-          "rooms": {
-            "type": "number",
-            "example": 0
-          },
-          "suites": {
-            "type": "number",
-            "example": 0
-          },
-          "bathrooms": {
-            "type": "number",
-            "example": 0
-          },
-          "parkingSpace": {
-            "type": "number",
-            "example": 0
-          },
-          "area": {
-            "type": "number",
-            "example": 100.5
-          },
-          "condominiumPrice": {
-            "type": "number",
-            "example": 100.5
-          },
-          "price": {
-            "type": "number",
-            "example": 100.5
-          },
-          "playground": {
-            "type": "boolean",
-            "example": true
-          },
-          "gym": {
-            "type": "boolean",
-            "example": true
-          },
-          "gourmetArea": {
-            "type": "boolean",
-            "example": true
-          },
-          "sportCourt": {
-            "type": "boolean",
-            "example": true
-          },
-          "pool": {
-            "type": "boolean",
-            "example": true
-          },
-          "warmPool": {
-            "type": "boolean",
-            "example": true
-          },
-          "greenArea": {
-            "type": "boolean",
-            "example": true
+          "properties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "available": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "sellOrRent": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "sell"
+                  }
+                }
+              },
+              "propertyType": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "house"
+                  }
+                }
+              },
+              "title": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "description": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "street": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "neighborhood": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "city": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "state": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "example": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              },
+              "furnished": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "rooms": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "suites": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "bathrooms": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "parkingSpace": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "integer"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "area": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 100.5
+                  }
+                }
+              },
+              "condominiumPrice": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 100.5
+                  }
+                }
+              },
+              "price": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "number"
+                  },
+                  "example": {
+                    "type": "number",
+                    "example": 100.5
+                  }
+                }
+              },
+              "playground": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "gym": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "gourmetArea": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "sportCourt": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "pool": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "warmPool": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "greenArea": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "boolean"
+                  },
+                  "example": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
           }
         },
         "xml": {
@@ -467,12 +1010,28 @@
         }
       },
       "ManyProperties": {
-        "type": "array",
-        "example": [],
-        "items": {},
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "array"
+          },
+          "items": {
+            "xml": {
+              "name": "singleproperty"
+            },
+            "$ref": "#/components/schemas/SingleProperty"
+          }
+        },
         "xml": {
           "name": "ManyProperties"
         }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }
